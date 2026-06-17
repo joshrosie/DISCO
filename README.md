@@ -1,11 +1,5 @@
-<p align="center">
-  <img src="media/Crystalite logo-03.png" alt="Crystalite" width="400" />
-</p>
-
----
->[!warning] Note
->This is a pre-release of the `crystalite` codebase and is not necessarily representative of the final working product.
-
+# Lightweight Diffusion Transformers and Verifier-Curated Self-Improvement for Crystalline Materials Discovery
+> The repo for my MSc Thesis in AI at the University of Amsterdam
 
 `crystalite` is a codebase for tokenized crystal representations, EDM-based generation, and evaluation for two workflows:
 
