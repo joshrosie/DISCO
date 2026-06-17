@@ -1,0 +1,41 @@
+/data/
+.venv
+__pycache__/
+mp20_cifs/
+mp_02072023/*
+/wandb/
+/outputs/
+logs/
+flowmm/
+phonon/
+jobs/
+job_outputs/
+baselines/
+.DS_Store
+
+# Local-only analysis artifacts (keep scripts + docs tracked, not outputs)
+/figures/
+/cfg_*_eval_n1024/
+/cfg_*_eval_debug/
+/eval_rows.parquet
+/samples/
+
+# External research codebases (provisioned by scripts/setup_*.sh)
+external/
+
+# Claude Code session/cache — never tracked
+.claude/
+
+# Local model checkpoints (large; trained/provisioned separately, live on cluster)
+*.pt
+
+# Local data + eval artifacts (canonical copies live on the cluster)
+/local_data/
+/results_final/
+/external_eval/
+
+# Reference PDFs / papers — keep on disk, don't track
+*.pdf
+
+# Other-chapter / abandoned-track scratch scripts moved off this branch
+scripts/archive/
