@@ -336,6 +336,47 @@ Curation is implemented in `src/data/synthetic_augmentation.py` (`make_synthetic
 
 Curation-time checkpoint selection uses `Train_MSUN` — MSUN measured against the full augmented training set (`MP-20 ∪ S_0 ∪ …`), not MP-20 alone, so the selector does not reward regenerating curated synthetic data.
 
+### Running a round
+
+A round is two steps: curate a synthetic set from the current model, then retrain on `MP-20 + synthetic`. The `scripts/*.slurm` files wrap these with `sbatch` and cluster env vars (and carry the complete flag set); the underlying commands are:
+
+**1. Curate `S0` from the base model (`M0 = dng.pt`).** Generate 100k candidates, relax + hull-score with NequIP, and keep up to 27,138 metastable-unique-novel structures:
+
+```bash
+python scripts/make_synthetic_dataset.py \
+  --checkpoint dng.pt \
+  --num_generate 100000 \
+  --max_samples 27138 \
+  --output_dir data/synthetic/crystalite_round0_msun_27k \
+  --generation_data_root data/mp20 \
+  --reference_data_root data/mp20 \
+  --filter_level msun_like \
+  --dedup_mode structure \
+  --thermo_mlip nequip \
+  --nequip_compile_path "data/mlip/nequip/*.nequip.pt2" \
+  --nequip_relax_mode batch \
+  --thermo_ehull_method mp2020_like \
+  --thermo_ppd_mp mp_02072023/2023-02-07-ppd-mp.pkl \
+  --ehull_metastable_thresh 0.1
+```
+
+Accepted structures are written (CIFs + `raw/train.csv`) under `--output_dir`, ready to be tokenized at load time like any MP20 root.
+
+**2. Train `M1` on `MP-20 + S0`:**
+
+```bash
+python src/train_crystalite.py \
+  --data_root data/mp20 --dataset_name mp20 \
+  --augmentation synthetic_concat \
+  --synthetic_data data/synthetic/crystalite_round0_msun_27k \
+  --output_dir outputs/dng_synthetic_round0 \
+  --best_ckpt --best_ckpt_selector auto --sample_full_train_novelty
+```
+
+`--sample_full_train_novelty` switches the `best.pt` selector to `Train_MSUN`. The size-matched control replaces the two augmentation flags with `--augmentation oversample_real --num_extra_samples 27138`.
+
+**Next round.** Repeat with the previous model's checkpoint and dedup against all prior rounds — curate `S1` with `--checkpoint outputs/dng_synthetic_round0/checkpoints/best.pt` and `--reference_data_root data/mp20:data/synthetic/crystalite_round0_msun_27k`, then train `M2` with `--synthetic_data data/synthetic/crystalite_round0_msun_27k:data/synthetic/crystalite_round1_msun_54k`.
+
 ### Thesis rounds
 
 The thesis reports **two rounds** (`M0 → M1 → M2`). Each round's synthetic batch is sized so the effective training set roughly doubles.
@@ -348,7 +389,7 @@ The thesis reports **two rounds** (`M0 → M1 → M2`). Each round's synthetic b
 
 Headline result on LeMat-GenBench (`comprehensive_multi_mlip_hull`, MACE / ORB / UMA, n=2500): external LeMat-MSUN rises `22.60% → 29.34% → 35.06%` across `M0 → M1 → M2`. Under the most conservative accounting — removing both regenerated training structures and lanthanide substitutions onto known frameworks — framework-novel MSUN still rises to `28.01%` at `M2`. A curation ladder (real-only, raw, dedup-only, full) localizes the gain to the metastability filter.
 
-See [docs/augmentation/](docs/augmentation/) for the full method, controls, and per-round numbers.
+See the thesis (Chapter 3 for the method, Chapter 4 for the curation-ladder controls and per-round numbers); the `scripts/*_round*` slurm files are the exact cluster-parameterized runs.
 
 > Scope: the thesis covers `M0`, `M1`, and `M2` only. Scripts for further rounds (`*_round2_*`, `*_round3_*`, topups) are exploratory and are not part of the thesis.
 
