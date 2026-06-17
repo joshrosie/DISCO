@@ -1,5 +1,5 @@
 # Lightweight Diffusion Transformers and Verifier-Curated Self-Improvement for Crystalline Materials Discovery
-> The repo for my MSc Thesis in AI at the University of Amsterdam
+> The repo for my MSc Thesis in AI at the University of Amsterdam. It contains both `crystalite`, a light-weight SOTA diffusion transformer for crystalline materials discovery; and `flywheel`, an iterative self-improvement loop built on top of `crystalite`, increasing the performance of the base model.
 
 `crystalite` is a codebase for tokenized crystal representations, EDM-based generation, and evaluation for two workflows:
 
@@ -382,5 +382,3 @@ Optional checkpoint-eval artifacts include:
 - `sun_samples/` and a manifest when `--save_sun_samples` is enabled
 
 If W&B logging is enabled during training, metrics and rendered sample images are also logged there.
-
-Logo design by [Dee Vasilevskaia](https://deevasilevskaia.com/).
